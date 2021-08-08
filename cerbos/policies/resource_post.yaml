@@ -1,0 +1,45 @@
+---
+apiVersion: api.cerbos.dev/v1
+resourcePolicy:
+  version: "default"
+  importDerivedRoles:
+    - common_roles
+  resource: "blogpost"
+  rules:
+    - actions: ['view:all']
+      effect: EFFECT_ALLOW
+      derivedRoles:
+        - all_users
+
+    - actions: ['view:single']
+      effect: EFFECT_ALLOW
+      roles:
+        - moderator
+        - member
+
+    - actions: ['create']
+      effect: EFFECT_ALLOW
+      derivedRoles:
+        - member_only
+
+    - actions: ['update']
+      effect: EFFECT_ALLOW
+      derivedRoles:
+        - owner
+        - moderator_only
+      condition:
+        match:
+          any:
+            of:
+              - expr: request.resource.attr.flagged == false && request.principal.attr.role == "member"
+              - expr: request.resource.attr.flagged == true && request.principal.attr.role == "moderator"
+
+    - actions: ['delete']
+      effect: EFFECT_ALLOW
+      derivedRoles:
+        - owner
+
+    - actions: ['flag']
+      effect: EFFECT_ALLOW
+      derivedRoles:
+        - moderator_only
